@@ -9,7 +9,7 @@ exports.parse = (filepath, channelName) => {
   const data = fs.readFileSync(CHANNEL_LIST);
   const channelList = csv.parse(data, {
     from: 2,
-    columns: ["recognize", "install", "short"]
+    columns: ["recognize", "install", "short", "serviceid"]
   });
   const channelName = jaconv.normalize(channelName);
   const recognize = jaconv.normalize(channel.recognize);
@@ -31,6 +31,11 @@ exports.parse = (filepath, channelName) => {
       if (channelName.match(new RegExp(`^${short}`))) {
         return channel;
       }
+
+      // サービスID       ：引数のチャンネル名から前方一致で探す（優先度1）
+      if (channelName.match(new RegExp(`^${serviceid}`))) {
+        return channel;
+      }
     }
 
     // 放送局名（認識用）：ファイル名先頭または" _"の後（優先度1）
@@ -42,6 +47,13 @@ exports.parse = (filepath, channelName) => {
 
     // 放送局略称       ：ファイル名の先頭、_の後または括弧の後で、略称直後は空白か括弧か"_"（優先度1）
     regexp = new RegExp(`^${short}[_\s]| _${short}| [(〔[{〈《｢『【≪]${short}[)〕\\]}〉》｣』】≫ _]`);
+    match = filename.match(regexp);
+    if (match) {
+      return channel;
+    }
+
+    // サービスID       ：ファイル名の先頭、_の後または括弧の後で、略称直後は空白か括弧か"_"（優先度1）
+    regexp = new RegExp(`^${serviceid}[_\s]| _${serviceid}| [(〔[{〈《｢『【≪]${serviceid}[)〕\\]}〉》｣』】≫ _]`);
     match = filename.match(regexp);
     if (match) {
       return channel;
@@ -61,6 +73,18 @@ exports.parse = (filepath, channelName) => {
       continue;
     }
     regexp = new RegExp(`[ _]${short}[)〕\\]}〉》｣』】≫ _]`);
+    match = filename.match(regexp);
+    if (match) {
+      result = channel;
+      priority = 3;
+      continue;
+    }
+
+    // サービスID       ：前が"_"、空白のいずれかかつ後が括弧、"_"、空白のいずれか（優先度3）
+    if (priority < 3) {
+      continue;
+    }
+    regexp = new RegExp(`[ _]${serviceid}[)〕\\]}〉》｣』】≫ _]`);
     match = filename.match(regexp);
     if (match) {
       result = channel;
