@@ -17,28 +17,32 @@ exports.parse = (filepath, channelName) => {
   }
   let result = null;
   let priority = 0;
+  let defaultAction = false;
   for (channel of channelList) {
     const recognize = jaconv.normalize(channel.recognize);
     const short = jaconv.normalize(channel.short);
     const serviceid = channel.serviceid;
 
-    if (channelName!=="") {
+    if (channelName !== "" && !defaultAction) {
 
       // 引数のチャンネル名の指定があれば、そちらを優先する
       // 放送局名（認識用）：引数のチャンネル名から前方一致で探す（優先度1）
       if (channelName.match(new RegExp(`^${recognize}`))) {
-        return channel;
+      return channel;
       }
 
       // 放送局略称       ：引数のチャンネル名から前方一致で探す（優先度1）
       if (channelName.match(new RegExp(`^${short}`))) {
-        return channel;
+      return channel;
       }
 
       // サービスID       ：引数のチャンネル名から前方一致で探す（優先度1）
       if (channelName.match(new RegExp(`^${serviceid}`))) {
-        return channel;
+      return channel;
       }
+      
+      // どれにも合致しなかったらファイル名から探すフラグを立てる
+      defaultAction = true;
     }
 
     // 放送局名（認識用）：ファイル名先頭または" _"の後（優先度1）
