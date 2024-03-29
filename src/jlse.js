@@ -123,7 +123,7 @@ const main = async () => {
           SAVE_DIR,
           TSDIVIDER_OUTPUT
         } = settings;
-  const channel = argv.channel ? parseChannel(inputFile, argv.channel) : parseChannel(inputFile, "");
+  const channel = argv.channel !== undefined ? parseChannel(inputFile, argv.channel) : parseChannel(inputFile, "");
   const param = parseParam(channel, inputFileName);
   let avsFile = createAvs(INPUT_AVS, inputFile, 1);
   if(param.use_tssplit == 1){
@@ -142,7 +142,7 @@ const main = async () => {
 
   if(argv.filter) {createFilter(inputFile, OUTPUT_AVS_CUT, OUTPUT_FILTER_CUT); }
 
-  if (argv.encode !== "") {
+  if (argv.encode !== undefined) {
     encoder(
       argv.encode,
       argv.outdir ? argv.outdir : inputFileDir,
