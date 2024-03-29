@@ -10,6 +10,7 @@ exports.LOGOFRAME_COMMAND = path.join(__dirname, "../bin/logoframe");
 exports.CHAPTEREXE_COMMAND = path.join(__dirname, "../bin/chapter_exe");
 exports.TSDIVIDER_COMMAND = path.join(__dirname, "../bin/tsdivider");
 exports.JLSCP_COMMAND = path.join(__dirname, "../bin/join_logo_scp");
+// ここで指定しているffmpegはffmpeg_filter.jsでのみ利用され、エンコードでは利用されない
 exports.FFPROBE_COMMAND = "/usr/local/bin/ffprobe";
 exports.FFMPEG_COMMAND = "/usr/local/bin/ffmpeg";
 

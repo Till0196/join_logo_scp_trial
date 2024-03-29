@@ -16,9 +16,15 @@ const argv = require("yargs")
   })
   .option("encode", {
     alias: "e",
-    type: "boolean",
-    default: false,
-    describe: "enable to ffmpeg encode"
+    type: "string",
+    default: "/usr/local/bin/ffmpeg",
+    describe: "set encoder path (ex. /usr/local/bin/qsvencc)"
+  })
+  .option("channel", {
+    alias: "c",
+    type: "string",
+    default: "",
+    describe: "set channel name (ex. TOKYO MX1)"
   })
   .option("target", {
     alias: "t",
@@ -30,7 +36,7 @@ const argv = require("yargs")
     alias: "o",
     type: "string",
     default: "",
-    describe: "set ffmpeg option"
+    describe: "set encoder option"
   })
   .option("outdir", {
     alias: "d",
@@ -56,8 +62,8 @@ const argv = require("yargs")
   )
   .check(function(argv) {
     const ext = path.extname(argv.input);
-    if (ext !== ".ts") {
-      console.error(`invalid file extension ${ext}.`);
+    if (ext !== ".ts" && ext !== ".m2ts") {
+      console.error(`Invalid file extension ${ext}. Only .ts and .m2ts files are allowed.`);
       return false;
     }
 
@@ -66,6 +72,15 @@ const argv = require("yargs")
     } catch (err) {
       console.error(`File ${argv.input} not found.`);
       return false;
+    }
+
+    if (argv.encode !== "") {
+      try {
+        fs.existsSync(argv.encode);
+      } catch (err) {
+        console.error(`Encoder ${argv.encode} not found.`);
+        return false;
+      }
     }
     return true;
   })
@@ -99,14 +114,16 @@ const main = async () => {
   const createFilter = require("./output/ffmpeg_filter").create;
   const createOutAvs = require("./output/avs").create;
   const createChapter = require("./output/chapter_jls").create;
-  const encode = require("./command/ffmpeg").exec;
+  const encoder = argv.encode.endsWith("ffmpeg") 
+    ? require("./command/ffmpeg").exec 
+    : require("./command/encoder").exec;
   const { INPUT_AVS, 
           OUTPUT_AVS_CUT, 
           OUTPUT_FILTER_CUT, 
           SAVE_DIR,
           TSDIVIDER_OUTPUT
         } = settings;
-  const channel = parseChannel(inputFile);
+  const channel = argv.channel ? parseChannel(inputFile, argv.channel) : parseChannel(inputFile, "");
   const param = parseParam(channel, inputFileName);
   let avsFile = createAvs(INPUT_AVS, inputFile, 1);
   if(param.use_tssplit == 1){
@@ -125,8 +142,14 @@ const main = async () => {
 
   if(argv.filter) {createFilter(inputFile, OUTPUT_AVS_CUT, OUTPUT_FILTER_CUT); }
 
-  if(argv.encode) {
-    encode(argv.outdir? argv.outdir : inputFileDir, argv.outname? argv.outname : inputFileName, argv.target, argv.option);
+  if (argv.encode !== "") {
+    encoder(
+      argv.encode,
+      argv.outdir ? argv.outdir : inputFileDir,
+      argv.outname ? argv.outname : inputFileName,
+      argv.target,
+      argv.option
+    );
   }
   if(argv.remove) {
     fs.removeSync(SAVE_DIR);

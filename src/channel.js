@@ -5,18 +5,33 @@ const jaconv = require("jaconv");
 
 const { CHANNEL_LIST } = require("./settings");
 
-exports.parse = filepath => {
+exports.parse = (filepath, channelName) => {
   const data = fs.readFileSync(CHANNEL_LIST);
   const channelList = csv.parse(data, {
     from: 2,
     columns: ["recognize", "install", "short"]
   });
+  const channelName = jaconv.normalize(channelName);
+  const recognize = jaconv.normalize(channel.recognize);
+  const short = jaconv.normalize(channel.short);
   const filename = jaconv.normalize(path.basename(filepath));
   let result = null;
   let priority = 0;
   for (channel of channelList) {
-    const recognize = jaconv.normalize(channel.recognize);
-    const short = jaconv.normalize(channel.short);
+
+    if (channelName!=="") {
+
+      // 引数のチャンネル名の指定があれば、そちらを優先する
+      // 放送局名（認識用）：引数のチャンネル名から前方一致で探す（優先度1）
+      if (channelName.match(new RegExp(`^${recognize}`))) {
+        return channel;
+      }
+
+      // 放送局略称       ：引数のチャンネル名から前方一致で探す（優先度1）
+      if (channelName.match(new RegExp(`^${short}`))) {
+        return channel;
+      }
+    }
 
     // 放送局名（認識用）：ファイル名先頭または" _"の後（優先度1）
     let regexp = new RegExp(`^${recognize}| _${recognize}`);
