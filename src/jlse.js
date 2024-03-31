@@ -74,14 +74,15 @@ const argv = require("yargs")
       return false;
     }
 
-    if (argv.encode !== "") {
-      try {
-        fs.existsSync(argv.encode);
-      } catch (err) {
-        console.error(`Encoder ${argv.encode} not found.`);
-        return false;
-      }
+    if (argv.encode !== undefined && argv.encode !== "" && fs.existsSync(argv.encode)) {
+      console.log(`Encoder path ${argv.encode} exists.`);
+    } else if (argv.encode === "") {
+      console.log("Encoder path is not provided. Skipping encoding process.");
+    } else {
+      console.error(`Encoder path ${argv.encode} does not exist.`);
+      return false;
     }
+
     return true;
   })
   .help().argv;
@@ -114,9 +115,9 @@ const main = async () => {
   const createFilter = require("./output/ffmpeg_filter").create;
   const createOutAvs = require("./output/avs").create;
   const createChapter = require("./output/chapter_jls").create;
-  const encoder = argv.encode.endsWith("ffmpeg") 
-    ? require("./command/ffmpeg").exec 
-    : require("./command/encoder").exec;
+  const encoder = argv.encode !== undefined && argv.encode.endsWith("ffmpeg")
+      ? require("./command/ffmpeg").exec
+      : require("./command/encoder").exec;
   const { INPUT_AVS, 
           OUTPUT_AVS_CUT, 
           OUTPUT_FILTER_CUT, 
